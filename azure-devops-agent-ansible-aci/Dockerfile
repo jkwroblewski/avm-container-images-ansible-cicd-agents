@@ -38,8 +38,7 @@ RUN useradd -m -s /bin/bash azp \
 WORKDIR /azp
 
 # Download and extract Azure Pipelines agent
-RUN curl -LsS "https://vstsagentpackage.azureedge.net/agent/${AGENT_VERSION}/vsts-agent-linux-x64-${AGENT_VERSION}.tar.gz" \
-    | tar -xz \
+RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
     && chown -R azp:azp /azp
 
 # Copy startup script
