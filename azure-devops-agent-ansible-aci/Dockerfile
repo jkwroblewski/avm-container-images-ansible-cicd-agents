@@ -38,7 +38,7 @@ RUN useradd -m -s /bin/bash azp \
 WORKDIR /azp
 
 # Download and extract Azure Pipelines agent
-RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash \
     && chown -R azp:azp /azp
 
 # Copy startup script
