@@ -20,12 +20,12 @@ RUN apt-get update \
         ruby \
         unzip \
         dnsutils \
-        openssh-client \ #pip and ansible deps
+        openssh-client \
         python3 \
         python3-pip \
         libicu-dev \
         sshpass \
-        && apt-get clean && rm -rf /var/lib/apt/lists/* #cleanup for keeping the container small
+        && apt-get clean && rm -rf /var/lib/apt/lists/* 
 
 #install Ansible form pip
 RUN pip3 install --quiet --no-cache-dir \
