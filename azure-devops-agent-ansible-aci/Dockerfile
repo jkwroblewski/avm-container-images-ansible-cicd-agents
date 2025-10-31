@@ -1,9 +1,13 @@
 FROM ubuntu:24.04
 
-ENV DEBIAN_FRONTEND=noninteractive
+#nuclear solution for disabling interactive prompts/modes. Switched in favor of more fine grained solution
+#ENV DEBIAN_FRONTEND=noninteractive
+
+#apt version of autoconfirm
+RUN echo "APT::Get::Assume-Yes \"true\";" > /etc/apt/apt.conf.d/90assumeyes
 
 # Install base dependencies
-RUN apt-get update && apt-get install -y \
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y \
     curl \
     jq \
     git \
@@ -15,7 +19,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Ansible via pip (more reliable than PPA)
-RUN pip3 install --no-cache-dir \
+RUN pip3 install --quiet --no-cache-dir \
     ansible \
     ansible-core \
     azure-cli \
@@ -25,10 +29,7 @@ RUN pip3 install --no-cache-dir \
     --break-system-packages
 
 # Install Ansible collections
-RUN ansible-galaxy collection install azure.azcollection
-
-# Azure DevOps agent version
-ARG AGENT_VERSION=3.245.0
+RUN DEBIAN_FRONTEND=noninteractive ansible-galaxy collection install azure.azcollection
 
 # Create non-root user for agent
 RUN useradd -m -s /bin/bash azp \
@@ -47,8 +48,5 @@ RUN chmod +x /azp/start.sh && chown azp:azp /azp/start.sh
 
 # Switch to non-root user
 USER azp
-
-# Store agent version as environment variable for reference
-ENV AGENT_VERSION=${AGENT_VERSION}
 
 ENTRYPOINT ["/azp/start.sh"]
