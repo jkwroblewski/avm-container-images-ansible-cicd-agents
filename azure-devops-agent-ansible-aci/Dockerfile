@@ -1,24 +1,33 @@
-FROM ubuntu:24.04
+FROM mcr.microsoft.com/azure-powershell:ubuntu-22.04
+ENV TARGETARCH="linux-x64"
 
-#nuclear solution for disabling interactive prompts/modes. Switched in favor of more fine grained solution
-#ENV DEBIAN_FRONTEND=noninteractive
-
-#apt version of autoconfirm
+# To make it easier for build and release pipelines to run apt-get,
+# configure apt to not require confirmation (assume the -y argument by default)
+ENV DEBIAN_FRONTEND=noninteractive
 RUN echo "APT::Get::Assume-Yes \"true\";" > /etc/apt/apt.conf.d/90assumeyes
 
-# Install base dependencies
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y \
-    curl \
-    jq \
-    git \
-    openssh-client \
-    python3 \
-    python3-pip \
-    libicu-dev \
-    sshpass \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+&& apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        jq \
+        git \
+        iputils-ping \
+        libicu70 \
+        libcurl4 \
+        libunwind8 \
+        netcat \
+        ruby \
+        unzip \
+        dnsutils \
+        openssh-client \ #pip and ansible deps
+        python3 \
+        python3-pip \
+        libicu-dev \
+        sshpass \
+        && apt-get clean && rm -rf /var/lib/apt/lists/* #cleanup for keeping the container small
 
-# Install Ansible via pip (more reliable than PPA)
+#install Ansible form pip
 RUN pip3 install --quiet --no-cache-dir \
     ansible \
     ansible-core \
@@ -29,24 +38,22 @@ RUN pip3 install --quiet --no-cache-dir \
     --break-system-packages
 
 # Install Ansible collections
-RUN DEBIAN_FRONTEND=noninteractive ansible-galaxy collection install azure.azcollection
+RUN ansible-galaxy collection install azure.azcollection
 
-# Create non-root user for agent
-RUN useradd -m -s /bin/bash azp \
-    && mkdir -p /azp \
-    && chown -R azp:azp /azp
 
-WORKDIR /azp
+RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
-# Download and extract Azure Pipelines agent
-RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash \
-    && chown -R azp:azp /azp
+WORKDIR /azp/
 
-# Copy startup script
-COPY start.sh /azp/start.sh
-RUN chmod +x /azp/start.sh && chown azp:azp /azp/start.sh
+COPY ./start.sh ./
+RUN chmod +x ./start.sh
 
-# Switch to non-root user
-USER azp
+# Create agent user and set up home directory
+RUN useradd -m -d /home/agent agent
+RUN chown -R agent:agent /azp /home/agent
 
-ENTRYPOINT ["/azp/start.sh"]
+USER agent
+# Another option is to run the agent as root.
+# ENV AGENT_ALLOW_RUNASROOT="true"
+
+ENTRYPOINT [ "./start.sh" ]
