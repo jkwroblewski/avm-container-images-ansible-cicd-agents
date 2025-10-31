@@ -28,14 +28,14 @@ RUN apt-get update \
         && apt-get clean && rm -rf /var/lib/apt/lists/* 
 
 #install Ansible form pip
-RUN pip3 install --quiet --no-cache-dir \
+RUN pip3 install --no-cache-dir \
     ansible \
     ansible-core \
     azure-cli \
     azure-keyvault-secrets \
     azure-identity \
-    pywinrm \
-    --break-system-packages
+    pywinrm 
+    
 
 # Install Ansible collections
 RUN ansible-galaxy collection install azure.azcollection
