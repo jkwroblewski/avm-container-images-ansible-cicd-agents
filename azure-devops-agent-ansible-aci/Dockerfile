@@ -49,11 +49,13 @@ COPY ./start.sh ./
 RUN chmod +x ./start.sh
 
 # Create agent user and set up home directory
-RUN useradd -m -d /home/agent agent
-RUN chown -R agent:agent /azp /home/agent
+# RUN useradd -m -d /home/agent agent
+# RUN chown -R agent:agent /azp /home/agent
 
-USER agent
+# USER agent
 # Another option is to run the agent as root.
-# ENV AGENT_ALLOW_RUNASROOT="true"
+ENV AGENT_ALLOW_RUNASROOT="true"
 
-ENTRYPOINT [ "./start.sh" ]
+# ENTRYPOINT [ "./start.sh" ]
+
+CMD ["./start.sh"]
